@@ -83,6 +83,6 @@ install(FILES
 )
 
 install(FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/conf/AnnotationMethod.conf" # source directory
+  "${CMAKE_CURRENT_SOURCE_DIR}/conf/flex_reflect_plugin.conf" # source directory
   DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" # target directory
 )

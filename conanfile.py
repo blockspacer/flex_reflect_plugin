@@ -23,12 +23,11 @@ class flex_reflect_plugin_conan_project(ConanFile):
 
     # Indicates License type of the packaged library
     # TODO (!!!)
-    # license = "MIT"
+    url = "https://CHANGE_ME"
+    license = "MIT" # CHANGE_ME
+    author = "CHANGE_ME <>"
 
     version = "master"
-
-    # TODO (!!!)
-    #url = "https://github.com/blockspacer/CXXCTP"
 
     description = "flex_reflect_plugin: C++ compile-time programming (serialization, reflection, code modification, enum to string, better enum, enum to json, extend or parse language, etc.)."
     topics = ('c++')
@@ -46,7 +45,7 @@ class flex_reflect_plugin_conan_project(ConanFile):
         "shared=True",
         "enable_clang_from_conan=False",
         "use_system_boost=False",
-        "enable_tests=False",
+        "enable_tests=True",
         "enable_sanitizers=False",
         # boost
         "boost:without_atomic=True",
@@ -107,7 +106,7 @@ class flex_reflect_plugin_conan_project(ConanFile):
         # flexlib
         "flexlib:shared=False",
         "flexlib:enable_clang_from_conan=False",
-        "flexlib:enable_tests=True",
+        #"flexlib:enable_tests=True",
         # flextool
         #"flextool:shared=False",
         "flextool:enable_clang_from_conan=False",
@@ -118,6 +117,8 @@ class flex_reflect_plugin_conan_project(ConanFile):
         "openssl:shared=True",
         # chromium_base
         "chromium_base:use_alloc_shim=True",
+        # chromium_tcmalloc
+        "chromium_tcmalloc:use_alloc_shim=True",
     )
 
     # Custom attributes for Bincrafters recipe conventions
@@ -125,7 +126,8 @@ class flex_reflect_plugin_conan_project(ConanFile):
     _build_subfolder = "."
 
     # NOTE: no cmake_find_package due to custom FindXXX.cmake
-    generators = "cmake", "cmake_paths", "virtualenv"
+    #generators = "cmake", "cmake_paths", "virtualenv"
+    generators = 'cmake_find_package', "cmake", "cmake_paths"
 
     # Packages the license for the conanfile.py
     #exports = ["LICENSE.md"]
@@ -140,7 +142,7 @@ class flex_reflect_plugin_conan_project(ConanFile):
                        "submodules/*", "thirdparty/*", "third-party/*",
                        "third_party/*", "base/*", "build/*", "flex_reflect_plugin/*")
 
-    settings = "os", "compiler", "build_type", "arch"
+    settings = "os_build", "os", "arch", "compiler", "build_type", "arch_build"
 
     #def source(self):
     #  url = "https://github.com/....."
@@ -176,52 +178,6 @@ class flex_reflect_plugin_conan_project(ConanFile):
       self.requires("chromium_base/master@conan/stable")
 
       self.requires("basis/master@conan/stable")
-
-      self.requires("corrade/2019.10@magnum/stable")
-
-      self.requires("type_safe/0.2@conan/stable")
-
-      self.requires("double-conversion/3.1.1@bincrafters/stable")
-
-      self.requires("gflags/2.2.2@bincrafters/stable")
-
-      self.requires("glog/0.4.0@bincrafters/stable")
-
-      # patched to support "openssl/OpenSSL_1_1_1-stable@conan/stable"
-      #self.requires("libevent/2.1.11@dev/stable")
-
-      # \note dispatcher must be thread-safe,
-      # so use entt after patch https://github.com/skypjack/entt/issues/449
-      # see https://github.com/skypjack/entt/commit/74f3df83dbc9fc4b43b8cfb9d71ba02234bd5c4a
-      self.requires("entt/3.3.2")
-
-      self.requires("lz4/1.8.3@bincrafters/stable")
-
-      # must match openssl version used in webrtc
-      ##self.requires("openssl/OpenSSL_1_1_1-stable@conan/stable")
-
-      #self.requires("OpenSSL/1.1.1c@conan/stable")
-
-      # patched to support "openssl/OpenSSL_1_1_1-stable@conan/stable"
-      self.requires("zlib/v1.2.11@conan/stable")
-
-      self.requires("lzma/5.2.4@bincrafters/stable")
-
-      self.requires("zstd/1.3.8@bincrafters/stable")
-
-      self.requires("snappy/1.1.7@bincrafters/stable")
-
-      self.requires("bzip2/1.0.8@dev/stable")
-
-      self.requires("libsodium/1.0.18@bincrafters/stable")
-
-      self.requires("libelf/0.8.13@bincrafters/stable")
-
-      self.requires("libdwarf/20190505@bincrafters/stable")
-
-      self.requires("clang_folly_conan/v2019.01.14.00@conan/stable")
-
-      self.requires("flexlib/master@conan/stable")
 
       self.requires("flextool/master@conan/stable")
 

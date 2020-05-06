@@ -335,6 +335,7 @@ set_target_properties(${LIB_NAME}
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /bin
     OUTPUT_NAME "${LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
+    # Plugins don't have any prefix (e.g. 'lib' on Linux)
     PREFIX ""
     ENABLE_EXPORTS 1
     CXX_STANDARD 17
@@ -468,6 +469,8 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   # https://stackoverflow.com/a/30877725
   BOOST_SYSTEM_NO_DEPRECATED BOOST_ERROR_CODE_HEADER_ONLY
   IS_CXXCTP=1
+  # see https://github.com/mosra/corrade/blob/af9d4216f07307a2dff471664eed1e50e180568b/modules/UseCorrade.cmake#L568
+  CORRADE_DYNAMIC_PLUGIN=1
 )
 
 target_compile_definitions(${LIB_NAME} PUBLIC
