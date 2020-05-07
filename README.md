@@ -21,5 +21,5 @@ GIT_SSL_NO_VERIFY=true \
       --profile clang \
           -o flex_reflect_plugin:shared=True \
           -o flex_reflect_plugin:enable_clang_from_conan=False \
-          -o flex_reflect_plugin:enable_tests=True
+          -e flex_reflect_plugin:enable_tests=True
 ```
