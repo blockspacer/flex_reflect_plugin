@@ -182,7 +182,7 @@ class AnnotationMethod
   }
 #endif // CLING_IS_ON
 
-  void process_eval_annotation(
+  void process_executeStringWithoutSpaces(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
     , const clang_utils::MatchResult& matchResult
@@ -191,7 +191,7 @@ class AnnotationMethod
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::AnnotationMethod::process_eval_annotation");
+                 "plugin::AnnotationMethod::process_executeStringWithoutSpaces");
 
 #if defined(CLING_IS_ON)
     DCHECK(clingInterpreter_);
@@ -242,7 +242,7 @@ class AnnotationMethod
   //  return p;
   //}
 
-  void process_export_annotation(
+  void process_executeCode(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
     , const clang_utils::MatchResult& matchResult
@@ -251,7 +251,7 @@ class AnnotationMethod
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::AnnotationMethod::process_export_annotation");
+                 "plugin::AnnotationMethod::process_executeCode");
 
 #if defined(CLING_IS_ON)
     DCHECK(clingInterpreter_);
@@ -332,7 +332,7 @@ class AnnotationMethod
 #endif // CLING_IS_ON
   }
 
-  void process_embed_annotation(
+  void process_executeCodeAndReplace(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
     , const clang_utils::MatchResult& matchResult
@@ -341,7 +341,7 @@ class AnnotationMethod
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::AnnotationMethod::process_embed_annotation");
+                 "plugin::AnnotationMethod::process_executeCodeAndReplace");
 
 #if defined(CLING_IS_ON)
     DCHECK(clingInterpreter_);
@@ -355,44 +355,50 @@ class AnnotationMethod
     std::ostringstream sstr;
     // populate variables that can be used by interpreted code:
     //   clangMatchResult, clangRewriter, clangDecl
-    /// \todo convert multiple variables to single struct
+    ///
+    ///
+    /// \todo convert multiple variables to single struct or tuple
+    ///
+    ///
     {
       // scope begin
       sstr << "[](){";
 
-      sstr << "const clang::ast_matchers::MatchFinder::MatchResult& "
-              "clangMatchResult = ";
+      sstr << "const clang::ast_matchers::MatchFinder::MatchResult&"
+              " clangMatchResult = ";
       sstr << cling_utils::passCppPointerIntoInterpreter(
-        reinterpret_cast<void*>(&matchResult)
+        reinterpret_cast<void*>(&const_cast<clang_utils::MatchResult&>(matchResult))
         , "*(const clang::ast_matchers::MatchFinder::MatchResult*)");
+      sstr << ";";
 
-      sstr << "clang::Rewriter& "
-              "clangRewriter = ";
+      sstr << "clang::Rewriter&"
+              " clangRewriter = ";
       sstr << cling_utils::passCppPointerIntoInterpreter(
         reinterpret_cast<void*>(&rewriter)
         , "*(clang::Rewriter*)");
+      sstr << ";";
 
-      sstr << "const clang::Decl* "
-              "clangDecl = ";
+      sstr << "const clang::Decl*"
+              " clangDecl = ";
       sstr << cling_utils::passCppPointerIntoInterpreter(
-        reinterpret_cast<void*>(&nodeDecl)
-        , "*(const clang::Decl*)");
+        reinterpret_cast<void*>(const_cast<clang::Decl*>(nodeDecl))
+        , "(const clang::Decl*)");
+      sstr << ";";
 
       // vars end
       sstr << "return ";
-      sstr << sstr.str() << ";";
+      sstr << processedAnnotaion << ";";
 
       // scope end
       sstr << "}();";
     }
-
 
     // execute code stored in annotation
     cling::Value result;
     {
       cling::Interpreter::CompilationResult compilationResult
         = clingInterpreter_->processCodeWithResult(
-            processedAnnotaion, result);
+            sstr.str(), result);
       if(compilationResult
          != cling::Interpreter::Interpreter::kSuccess)
       {
@@ -416,10 +422,14 @@ class AnnotationMethod
         auto resOption =
           static_cast<llvm::Optional<std::string>*>(resOptionVoid);
         if(resOption) {
-          if(resOption->hasValue() && !resOption->getValue().empty()) {
+          if(resOption->hasValue()) {
               rewriter.ReplaceText(
                           clang::SourceRange(startLoc, endLoc),
                           resOption->getValue());
+          } else {
+            VLOG(9)
+              << "ExecuteCodeAndReplace: kept old code."
+              << " Nothing provided to perform rewriter.ReplaceText";
           }
           delete resOption; /// \note frees resOptionVoid memory
         }
@@ -467,8 +477,8 @@ class AnnotationMethod
     std::vector<::cxxctp::parsed_func> parsedFuncs;
     parsedFuncs = ::cxxctp::split_to_funcs(processedAnnotaion);
     for (const ::cxxctp::parsed_func & seg : parsedFuncs) {
-        DVLOG(9) << "segment: " << seg.func_with_args_as_string_;
-        DVLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
+        VLOG(9) << "segment: " << seg.func_with_args_as_string_;
+        VLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
 
         if(!seg.parsed_func_.func_name_.empty()) {
             funcs_to_call.push_back(seg);
@@ -476,24 +486,24 @@ class AnnotationMethod
         }
 
         for (auto const& arg : seg.parsed_func_.args_.as_vec_) {
-            DVLOG(9) << "    arg name: " << arg.name_;
-            DVLOG(9) << "    arg value: " << arg.value_;
+            VLOG(9) << "    arg name: " << arg.name_;
+            VLOG(9) << "    arg value: " << arg.value_;
         }
         for (auto const& [key, values] : seg.parsed_func_.args_.as_name_to_value_) {
-            DVLOG(9) << "    arg key: " << key;
-            DVLOG(9) << "    arg values (" << values.size() <<"): ";
+            VLOG(9) << "    arg key: " << key;
+            VLOG(9) << "    arg values (" << values.size() <<"): ";
             for (auto const& val : values) {
-                DVLOG(9) << "        " << val;
+                VLOG(9) << "        " << val;
             }
         }
-        DVLOG(9) << "\n";
+        VLOG(9) << "\n";
     }
 
     DLOG(INFO) << "generator for processedAnnotaion: "
                  << processedAnnotaion;
 
     for (const ::cxxctp::parsed_func& func_to_call : funcs_to_call) {
-        DVLOG(9) << "main_module task " << func_to_call.func_with_args_as_string_ << "... " << '\n';
+        VLOG(9) << "main_module task " << func_to_call.func_with_args_as_string_ << "... " << '\n';
 
         auto callback = sourceTransformRules_->find(
           func_to_call.parsed_func_.func_name_);
@@ -517,7 +527,7 @@ class AnnotationMethod
   }
 #endif // 0
 
-  void process_funccall_annotation(
+  void process_funccall(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
     , const clang_utils::MatchResult& matchResult
@@ -526,7 +536,7 @@ class AnnotationMethod
   {
     DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
     TRACE_EVENT0("toplevel",
-                 "plugin::AnnotationMethod::process_funccall_annotation");
+                 "plugin::AnnotationMethod::process_funccall");
 
 #if defined(CLING_IS_ON)
     DCHECK(clingInterpreter_);
@@ -536,8 +546,8 @@ class AnnotationMethod
     std::vector<::cxxctp::parsed_func> parsedFuncs;
     parsedFuncs = ::cxxctp::split_to_funcs(processedAnnotaion);
     for (const ::cxxctp::parsed_func & seg : parsedFuncs) {
-        DVLOG(9) << "segment: " << seg.func_with_args_as_string_;
-        DVLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
+        VLOG(9) << "segment: " << seg.func_with_args_as_string_;
+        VLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
 
         if(!seg.parsed_func_.func_name_.empty()) {
             funcs_to_call.push_back(seg);
@@ -545,17 +555,17 @@ class AnnotationMethod
         }
 
         for (auto const& arg : seg.parsed_func_.args_.as_vec_) {
-            DVLOG(9) << "    arg name: " << arg.name_;
-            DVLOG(9) << "    arg value: " << arg.value_;
+            VLOG(9) << "    arg name: " << arg.name_;
+            VLOG(9) << "    arg value: " << arg.value_;
         }
         for (auto const& [key, values] : seg.parsed_func_.args_.as_name_to_value_) {
-            DVLOG(9) << "    arg key: " << key;
-            DVLOG(9) << "    arg values (" << values.size() <<"): ";
+            VLOG(9) << "    arg key: " << key;
+            VLOG(9) << "    arg values (" << values.size() <<"): ";
             for (auto const& val : values) {
-                DVLOG(9) << "        " << val;
+                VLOG(9) << "        " << val;
             }
         }
-        DVLOG(9) << "\n";
+        VLOG(9) << "\n";
     }
 
     DLOG(INFO)
@@ -563,7 +573,7 @@ class AnnotationMethod
       << processedAnnotaion;
 
     for (const ::cxxctp::parsed_func& func_to_call : funcs_to_call) {
-        DVLOG(9) << "main_module task "
+        VLOG(9) << "main_module task "
                    << func_to_call.func_with_args_as_string_
                    << "... " << '\n';
 
@@ -579,14 +589,31 @@ class AnnotationMethod
         }
 
         DCHECK(callback->second);
-        callback->second.Run(cxxctp_callback_args{
-          func_to_call,
-          matchResult,
-          rewriter,
-          nodeDecl,
-          parsedFuncs
-        });
-    }
+        cxxctp_callback_result result
+          = callback->second.Run(cxxctp_callback_args{
+              func_to_call,
+              matchResult,
+              rewriter,
+              nodeDecl,
+              parsedFuncs
+            });
+
+      // remove annotation from source file
+      // replacing it with callback result
+      {
+        clang::SourceLocation startLoc = nodeDecl->getLocStart();
+        clang::SourceLocation endLoc = nodeDecl->getLocEnd();
+
+        clang_utils::expandLocations(startLoc, endLoc, rewriter);
+        if(result.replacer != nullptr) {
+          //NOTIMPLEMENTED();
+          //NOTREACHED();
+          rewriter.ReplaceText(
+                      clang::SourceRange(startLoc, endLoc),
+                      result.replacer);
+        }
+      }
+    } // for
   }
 
   void handle_event_RegisterAnnotationMethods(
@@ -615,7 +642,7 @@ class AnnotationMethod
     // does not support newline characters or spaces
     // may use `#include` or preprocessor macros
     // example:
-    //   $executeString("#include <cling/Interpreter/Interpreter.h>")
+    //   $executeStringWithoutSpaces("#include <cling/Interpreter/Interpreter.h>")
     // if you need to execute multiline C++ code line - use "executeCode"
     /**
       EXAMPLE:
@@ -630,7 +657,7 @@ class AnnotationMethod
     **/
     annotationMethods["{executeStringWithoutSpaces};"] =
       base::BindRepeating(
-        &AnnotationMethod::process_eval_annotation
+        &AnnotationMethod::process_executeStringWithoutSpaces
         , base::Unretained(this));
 
     // exports arbitrary C++ code, code can be multiline
@@ -648,7 +675,7 @@ class AnnotationMethod
     **/
     annotationMethods["{executeCode};"] =
       base::BindRepeating(
-        &AnnotationMethod::process_export_annotation
+        &AnnotationMethod::process_executeCode
         , base::Unretained(this));
 
     // embeds arbitrary C++ code
@@ -662,7 +689,7 @@ class AnnotationMethod
     **/
     annotationMethods["{executeCodeAndReplace};"] =
       base::BindRepeating(
-        &AnnotationMethod::process_embed_annotation
+        &AnnotationMethod::process_executeCodeAndReplace
         , base::Unretained(this));
 
 #if 0
@@ -692,7 +719,7 @@ class AnnotationMethod
     **/
     annotationMethods["{funccall};"] =
       base::BindRepeating(
-        &AnnotationMethod::process_funccall_annotation
+        &AnnotationMethod::process_funccall
         , base::Unretained(this));
   }
 
