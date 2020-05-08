@@ -31,6 +31,12 @@
 #include <base/strings/string_util.h>
 #include <base/trace_event/trace_event.h>
 
+#include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/AST/ASTContext.h>
+#include <clang/Lex/Preprocessor.h>
+
+#include <type_traits>
+
 static const std::string kPluginDebugLogName = "(AnnotationMethod plugin)";
 
 static const std::string kVersion = "v0.0.1";
@@ -192,7 +198,7 @@ class AnnotationMethod
 #endif // CLING_IS_ON
 
     DLOG(INFO)
-      << "eval for processedAnnotaion: "
+      << "started processing of annotation: "
       << processedAnnotaion;
 
 #if defined(CLING_IS_ON)
@@ -220,8 +226,21 @@ class AnnotationMethod
                   clang::SourceRange(startLoc, endLoc),
                   "");
     }
+#else
+  LOG(WARNING)
+    << "Unable to execute C++ code at runtime: "
+    << "Cling is disabled.";
 #endif // CLING_IS_ON
   }
+
+  //clang::Poss getPosition(const clang::SourceManager& sm
+  //  , const clang::SourceLocation& loc)
+  //{
+  //  unsigned p{};
+  //  p.line = sm.getSpellingLineNumber(loc) - 1;
+  //  p.column = sm.getSpellingColumnNumber(loc) - 1;
+  //  return p;
+  //}
 
   void process_export_annotation(
     const std::string& processedAnnotaion
@@ -238,7 +257,7 @@ class AnnotationMethod
     DCHECK(clingInterpreter_);
 #endif // CLING_IS_ON
 
-    DLOG(INFO) << "export for processedAnnotaion: "
+    DLOG(INFO) << "started processing of annotation: "
                  << processedAnnotaion;
 
 #if defined(CLING_IS_ON)
@@ -263,7 +282,23 @@ class AnnotationMethod
 
       clang_utils::expandLocations(startLoc, endLoc, rewriter);
 
-      const std::string export_start_token = "$export";
+      clang::ASTContext *context = matchResult.Context;
+      DCHECK(context);
+
+      rewriter.ReplaceText(
+                  clang::SourceRange(startLoc, endLoc),
+                  "");
+
+      //r.start = getPosition(
+      //    context->getSourceManager()
+      //    , clang::Lexer::GetBeginningOfToken(
+      //        startLoc, context->getSourceManager(), context->getLangOpts()));
+      //r.end = getPosition(
+      //    context->getSourceManager()
+      //    , clang::Lexer::getLocForEndOfToken(
+      //        endLoc, 0, context->getSourceManager(), context->getLangOpts()));
+#if 0
+      const std::string export_start_token = "$executeCode";
 
       clang::ASTContext *Context = matchResult.Context;
       // find '('
@@ -287,7 +322,13 @@ class AnnotationMethod
                       endLoc.getLocWithOffset(export_end_token.length())
                       ),
                   "");
+#endif // 0
     }
+
+#else
+  LOG(WARNING)
+    << "Unable to execute C++ code at runtime: "
+    << "Cling is disabled.";
 #endif // CLING_IS_ON
   }
 
@@ -307,33 +348,43 @@ class AnnotationMethod
 #endif // CLING_IS_ON
 
     DLOG(INFO)
-      << "embed for processedAnnotaion: "
+      << "started processing of annotation: "
       << processedAnnotaion;
+
 #if defined(CLING_IS_ON)
     std::ostringstream sstr;
-    // scope begin
-    sstr << "[](){";
-    // vars begin
-    sstr << "const clang::ast_matchers::MatchFinder::MatchResult& clangMatchResult = ";
-    sstr << "*(const clang::ast_matchers::MatchFinder::MatchResult*)("
-            // Pass a pointer into cling as a string.
-         << std::hex << std::showbase
-         << reinterpret_cast<size_t>(&matchResult) << ");";
-    sstr << "clang::Rewriter& clangRewriter = ";
-    sstr << "*(clang::Rewriter*)("
-            // Pass a pointer into cling as a string.
-         << std::hex << std::showbase
-         << reinterpret_cast<size_t>(&rewriter) << ");";
-    sstr << "const clang::Decl* clangDecl = ";
-    sstr << "(const clang::Decl*)("
-            // Pass a pointer into cling as a string.
-         << std::hex << std::showbase
-         << reinterpret_cast<size_t>(nodeDecl) << ");";
-    // vars end
-    sstr << "return ";
-    sstr << processedAnnotaion << ";";
-    // scope end
-    sstr << "}();";
+    // populate variables that can be used by interpreted code:
+    //   clangMatchResult, clangRewriter, clangDecl
+    /// \todo convert multiple variables to single struct
+    {
+      // scope begin
+      sstr << "[](){";
+
+      sstr << "const clang::ast_matchers::MatchFinder::MatchResult& "
+              "clangMatchResult = ";
+      sstr << cling_utils::passCppPointerIntoInterpreter(
+        reinterpret_cast<void*>(&matchResult)
+        , "*(const clang::ast_matchers::MatchFinder::MatchResult*)");
+
+      sstr << "clang::Rewriter& "
+              "clangRewriter = ";
+      sstr << cling_utils::passCppPointerIntoInterpreter(
+        reinterpret_cast<void*>(&rewriter)
+        , "*(clang::Rewriter*)");
+
+      sstr << "const clang::Decl* "
+              "clangDecl = ";
+      sstr << cling_utils::passCppPointerIntoInterpreter(
+        reinterpret_cast<void*>(&nodeDecl)
+        , "*(const clang::Decl*)");
+
+      // vars end
+      sstr << "return ";
+      sstr << sstr.str() << ";";
+
+      // scope end
+      sstr << "}();";
+    }
 
 
     // execute code stored in annotation
@@ -379,9 +430,14 @@ class AnnotationMethod
                       << sstr.str();
       }
     }
+#else
+  LOG(WARNING)
+    << "Unable to execute C++ code at runtime: "
+    << "Cling is disabled.";
 #endif // CLING_IS_ON
   }
 
+#if 0
   void process_codegen_annotation(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
@@ -459,6 +515,7 @@ class AnnotationMethod
         });
     }
   }
+#endif // 0
 
   void process_funccall_annotation(
     const std::string& processedAnnotaion
@@ -501,8 +558,9 @@ class AnnotationMethod
         DVLOG(9) << "\n";
     }
 
-    DLOG(INFO) << "generator for code: "
-                 << processedAnnotaion;
+    DLOG(INFO)
+      << "generator for code: "
+      << processedAnnotaion;
 
     for (const ::cxxctp::parsed_func& func_to_call : funcs_to_call) {
         DVLOG(9) << "main_module task "
@@ -553,29 +611,85 @@ class AnnotationMethod
     sourceTransformRules_
       = &sourceTransformPipeline.sourceTransformRules;
 
-    // evaluates arbitrary C++ code
-    annotationMethods["{eval};"] =
+    // evaluates arbitrary C++ code line
+    // does not support newline characters or spaces
+    // may use `#include` or preprocessor macros
+    // example:
+    //   $executeString("#include <cling/Interpreter/Interpreter.h>")
+    // if you need to execute multiline C++ code line - use "executeCode"
+    /**
+      EXAMPLE:
+        // will be replaced with empty string
+        __attribute__((annotate("{gen};{executeStringWithoutSpaces};\
+        printf(\"Hello world!\");"))) \
+        int SOME_UNIQUE_NAME0
+        ;
+        // if nothing printed, then
+        // replace printf with
+        // LOG(INFO)<<\"Hello!\";"))) \
+    **/
+    annotationMethods["{executeStringWithoutSpaces};"] =
       base::BindRepeating(
         &AnnotationMethod::process_eval_annotation
         , base::Unretained(this));
 
-    // exports arbitrary C++ code
-    annotationMethods["{export};"] =
+    // exports arbitrary C++ code, code can be multiline
+    // unable to use `#include` or preprocessor macros
+    /**
+      EXAMPLE:
+        // will be replaced with empty string
+        __attribute__((annotate("{gen};{executeCode};\
+        printf(\"Hello me!\");"))) \
+        int SOME_UNIQUE_NAME1
+        ;
+        // if nothing printed, then
+        // replace printf with
+        // LOG(INFO)<<\"Hello!\";"))) \
+    **/
+    annotationMethods["{executeCode};"] =
       base::BindRepeating(
         &AnnotationMethod::process_export_annotation
         , base::Unretained(this));
 
     // embeds arbitrary C++ code
-    annotationMethods["{embed};"] =
+    /**
+      EXAMPLE:
+        // will be replaced with 1234
+        __attribute__((annotate("{gen};{executeCodeAndReplace};\
+        new llvm::Optional<std::string>{\"1234\"};")))
+        int SOME_UNIQUE_NAME2
+        ;
+    **/
+    annotationMethods["{executeCodeAndReplace};"] =
       base::BindRepeating(
         &AnnotationMethod::process_embed_annotation
         , base::Unretained(this));
 
+#if 0
     annotationMethods["{codegen};"] =
       base::BindRepeating(
         &AnnotationMethod::process_codegen_annotation
         , base::Unretained(this));
+#endif // 0
 
+    /**
+      EXAMPLE:
+        #include <string>
+        #include <vector>
+        struct
+          __attribute__((annotate("{gen};{funccall};make_reflect;")))
+        SomeStructName {
+         public:
+          SomeStructName() {
+            // ...
+          }
+         private:
+          const int m_bar2 = 2;
+
+          std::vector<std::string> m_VecStr2;
+        };
+        // handler for make_reflect must be registered by plugin!
+    **/
     annotationMethods["{funccall};"] =
       base::BindRepeating(
         &AnnotationMethod::process_funccall_annotation
