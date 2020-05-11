@@ -218,6 +218,10 @@ class AnnotationMethod
     // remove annotation from source file
     {
       clang::SourceLocation startLoc = nodeDecl->getLocStart();
+      // Note Stmt::getLocEnd() returns the source location prior to the
+      // token at the end of the line.  For instance, for:
+      // var = 123;
+      //      ^---- getLocEnd() points here.
       clang::SourceLocation endLoc = nodeDecl->getLocEnd();
 
       clang_utils::expandLocations(startLoc, endLoc, rewriter);
@@ -278,6 +282,10 @@ class AnnotationMethod
     // remove annotation from source file
     {
       clang::SourceLocation startLoc = nodeDecl->getLocStart();
+      // Note Stmt::getLocEnd() returns the source location prior to the
+      // token at the end of the line.  For instance, for:
+      // var = 123;
+      //      ^---- getLocEnd() points here.
       clang::SourceLocation endLoc = nodeDecl->getLocEnd();
 
       clang_utils::expandLocations(startLoc, endLoc, rewriter);
@@ -412,6 +420,10 @@ class AnnotationMethod
     // replacing it with |cling::Value result|
     {
       clang::SourceLocation startLoc = nodeDecl->getLocStart();
+      // Note Stmt::getLocEnd() returns the source location prior to the
+      // token at the end of the line.  For instance, for:
+      // var = 123;
+      //      ^---- getLocEnd() points here.
       clang::SourceLocation endLoc = nodeDecl->getLocEnd();
 
       clang_utils::expandLocations(startLoc, endLoc, rewriter);
@@ -463,20 +475,20 @@ class AnnotationMethod
     DCHECK(clingInterpreter_);
 #endif // CLING_IS_ON
 
-    std::vector<::cxxctp::parsed_func> funcs_to_call;
+    std::vector<::flexlib::parsed_func> funcs_to_call;
 
     funcs_to_call.push_back(
-      ::cxxctp::parsed_func{
+      ::flexlib::parsed_func{
         "call_codegen",
-        ::cxxctp::parsed_func_detail{
+        ::flexlib::parsed_func_detail{
           "call_codegen",
-          ::cxxctp::args{}
+          ::flexlib::args{}
         }
       });
 
-    std::vector<::cxxctp::parsed_func> parsedFuncs;
-    parsedFuncs = ::cxxctp::split_to_funcs(processedAnnotaion);
-    for (const ::cxxctp::parsed_func & seg : parsedFuncs) {
+    std::vector<::flexlib::parsed_func> parsedFuncs;
+    parsedFuncs = ::flexlib::split_to_funcs(processedAnnotaion);
+    for (const ::flexlib::parsed_func & seg : parsedFuncs) {
         VLOG(9) << "segment: " << seg.func_with_args_as_string_;
         VLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
 
@@ -502,7 +514,7 @@ class AnnotationMethod
     DLOG(INFO) << "generator for processedAnnotaion: "
                  << processedAnnotaion;
 
-    for (const ::cxxctp::parsed_func& func_to_call : funcs_to_call) {
+    for (const ::flexlib::parsed_func& func_to_call : funcs_to_call) {
         VLOG(9) << "main_module task " << func_to_call.func_with_args_as_string_ << "... " << '\n';
 
         auto callback = sourceTransformRules_->find(
@@ -516,7 +528,7 @@ class AnnotationMethod
         }
 
         DCHECK(callback->second);
-        callback->second.Run(cxxctp_callback_args{
+        callback->second.Run(flexlib_callback_args{
           func_to_call,
           matchResult,
           rewriter,
@@ -542,10 +554,10 @@ class AnnotationMethod
     DCHECK(clingInterpreter_);
 #endif // CLING_IS_ON
 
-    std::vector<::cxxctp::parsed_func> funcs_to_call;
-    std::vector<::cxxctp::parsed_func> parsedFuncs;
-    parsedFuncs = ::cxxctp::split_to_funcs(processedAnnotaion);
-    for (const ::cxxctp::parsed_func & seg : parsedFuncs) {
+    std::vector<::flexlib::parsed_func> funcs_to_call;
+    std::vector<::flexlib::parsed_func> parsedFuncs;
+    parsedFuncs = ::flexlib::split_to_funcs(processedAnnotaion);
+    for (const ::flexlib::parsed_func & seg : parsedFuncs) {
         VLOG(9) << "segment: " << seg.func_with_args_as_string_;
         VLOG(9) << "funcs_to_call1  func_name_: " << seg.parsed_func_.func_name_;
 
@@ -572,7 +584,7 @@ class AnnotationMethod
       << "generator for code: "
       << processedAnnotaion;
 
-    for (const ::cxxctp::parsed_func& func_to_call : funcs_to_call) {
+    for (const ::flexlib::parsed_func& func_to_call : funcs_to_call) {
         VLOG(9) << "main_module task "
                    << func_to_call.func_with_args_as_string_
                    << "... " << '\n';
@@ -589,19 +601,23 @@ class AnnotationMethod
         }
 
         DCHECK(callback->second);
-        cxxctp_callback_result result
-          = callback->second.Run(cxxctp_callback_args{
-              func_to_call,
-              matchResult,
-              rewriter,
-              nodeDecl,
-              parsedFuncs
+        clang_utils::SourceTransformResult result
+          = callback->second.Run(clang_utils::SourceTransformOptions{
+              func_to_call
+              , matchResult
+              , rewriter
+              , nodeDecl
+              , parsedFuncs
             });
 
       // remove annotation from source file
       // replacing it with callback result
       {
         clang::SourceLocation startLoc = nodeDecl->getLocStart();
+        // Note Stmt::getLocEnd() returns the source location prior to the
+        // token at the end of the line.  For instance, for:
+        // var = 123;
+        //      ^---- getLocEnd() points here.
         clang::SourceLocation endLoc = nodeDecl->getLocEnd();
 
         clang_utils::expandLocations(startLoc, endLoc, rewriter);
@@ -628,7 +644,7 @@ class AnnotationMethod
 #endif // CLING_IS_ON
 
     DCHECK(event.annotationMethods);
-    ::cxxctp::AnnotationMethods& annotationMethods
+    ::flexlib::AnnotationMethods& annotationMethods
       = *event.annotationMethods;
 
     DCHECK(event.sourceTransformPipeline);

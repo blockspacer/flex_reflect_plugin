@@ -111,6 +111,10 @@ option(CONAN_AUTO_INSTALL "Let CMake call conan install automatically"
   #OFF # disable by default cause llvm requires long build with CONAN_LLVM_SINGLE_THREAD_BUILD=1
   ON
 )
+set(CONAN_FORCE_AUTO_INSTALL
+  "" # may be changed to "FORCE"
+  CACHE STRING
+  "CONAN_FORCE_AUTO_INSTALL")
 if (CONAN_AUTO_INSTALL)
   set(CONAN_PROFILE
       "clang"
@@ -123,7 +127,7 @@ if (CONAN_AUTO_INSTALL)
   # No --build=missing cause llvm requires long build
   conan_auto_install(
     CONAN_OPTIONS "--profile=${CONAN_PROFILE} -s build_type=${conan_build_type} -s cling_conan:build_type=Release -o openssl:shared=True"
-    #FORCE
+    ${CONAN_FORCE_AUTO_INSTALL}
   )
 endif()
 
@@ -352,83 +356,6 @@ if(ENABLE_CLING)
   list(APPEND CLING_DEFINITIONS CLING_IS_ON=1)
   target_link_libraries(${LIB_NAME} PUBLIC#PRIVATE
     CONAN_PKG::cling_conan
-    #-lLLVMOption
-    #-lclangTooling
-    #-lclangFrontendTool
-    #-lclangFrontend
-    #-lclangDriver
-    #-lclangSerialization
-    #-lclangCodeGen
-    #-lclangParse
-    #-lclangSema
-    #-lclangStaticAnalyzerFrontend
-    #-lclangStaticAnalyzerCheckers
-    #-lclangStaticAnalyzerCore
-    #-lclangAnalysis
-    #-lclangARCMigrate
-    #-lclangRewrite
-    #-lclangRewriteFrontend
-    #-lclangEdit
-    #-lclangAST
-    #-lclangLex
-    #-lclangBasic
-    #-lclang
-    #-lcling
-    #-lclingInterpreter
-    #
-    #clangARCMigrate
-    #clangAnalysis
-    #clangAST
-    #clangASTMatchers
-    #clangBasic
-    #clangCodeGen
-    #clangDriver
-    #clangDynamicASTMatchers
-    #clangEdit
-    #clangFormat
-    #clangFrontend
-    #clangFrontendTool
-    #clangIndex
-    #clangLex
-    #clangParse
-    #clangRewrite
-    #clangRewriteFrontend
-    #clangSema
-    #clangSerialization
-    #clangStaticAnalyzerCheckers
-    #clangStaticAnalyzerCore
-    #clangStaticAnalyzerFrontend
-    #clangTooling
-    #clangToolingCore
-    #clangToolingRefactor
-    #clangStaticAnalyzerCore
-    #clangDynamicASTMatchers
-    #clangCodeGen
-    #clangFrontendTool
-    #clang.so
-    #clangEdit
-    #clangRewriteFrontend
-    #clangDriver
-    #clangSema
-    #clangASTMatchers
-    #clangSerialization
-    #clangBasic
-    #clangAST
-    #clangTooling
-    #clangStaticAnalyzerFrontend
-    #clangFormat
-    #clangToolingRefactor
-    #clangLex
-    #clangFrontend
-    #clangRewrite
-    #clangToolingCore
-    #clangIndex
-    #clangAnalysis
-    #clangParse
-    #clangStaticAnalyzerCheckers
-    #clangARCMigrate
-    #cling
-    #clingInterpreter
   )
 
   get_target_property (cling_conan_IMPORTED_LOCATION CONAN_PKG::cling_conan INTERFACE_INCLUDE_DIRECTORIES)
@@ -468,7 +395,6 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   ${flex_reflect_plugin_PRIVATE_DEFINES}
   # https://stackoverflow.com/a/30877725
   BOOST_SYSTEM_NO_DEPRECATED BOOST_ERROR_CODE_HEADER_ONLY
-  IS_CXXCTP=1
   # see https://github.com/mosra/corrade/blob/af9d4216f07307a2dff471664eed1e50e180568b/modules/UseCorrade.cmake#L568
   CORRADE_DYNAMIC_PLUGIN=1
 )

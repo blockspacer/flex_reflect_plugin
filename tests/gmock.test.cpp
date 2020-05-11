@@ -158,22 +158,34 @@
 #include <clang/Tooling/Tooling.h>
 
 TEST(AnnotationParser, LinksWithClingLLVM) {
-  ::cxxctp::AnnotationMethods annotationMethods;
+  ::flexlib::AnnotationMethods annotationMethods;
   ::clang_utils::SourceTransformPipeline sourceTransformPipeline;
 
-  ::cxxctp::AnnotationParser annotationParser(&annotationMethods);
+  ::flexlib::AnnotationParser annotationParser(&annotationMethods);
 
-  ::cxxctp::AnnotationMatchHandler anotationMatchHandler(
-    &annotationParser, &annotationMethods);
+  ::flexlib::AnnotationMatchHandler anotationMatchHandler(
+    &annotationParser
+    , &annotationMethods
+    // SaveFileHandler
+    , base::BindRepeating(
+        [
+        ](
+          const clang::FileID& fileID
+          , const clang::FileEntry* fileEntry
+          , clang::Rewriter& rewriter
+        ){
+
+        }
+    ));
   scoped_refptr<clang_utils::AnnotationMatchOptions>
     annotationMatchOptions
       = new clang_utils::AnnotationMatchOptions(
-          ::cxxctp::kAnnotateAttrName
+          ::flexlib::kAnnotateAttrName
           , base::BindRepeating(
-              &::cxxctp::AnnotationMatchHandler::matchHandler
+              &::flexlib::AnnotationMatchHandler::matchHandler
               , base::Unretained(&anotationMatchHandler))
           , base::BindRepeating(
-              &::cxxctp::AnnotationMatchHandler::endSourceFileHandler
+              &::flexlib::AnnotationMatchHandler::endSourceFileHandler
               , base::Unretained(&anotationMatchHandler))
         );
 

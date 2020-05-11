@@ -58,10 +58,10 @@ class TestPackageConan(ConanFile):
             self.output.info('clang_includes = %s' % (clang_includes))
             flextool_cmd = "flextool" \
               " --outdir ." \
-              " --srcdir ." \
+              " --indir ." \
               " --load_plugin {}" \
-              " -extra-arg=-I{}" \
-              " -extra-arg=-I{}" \
+              " --extra-arg=-I{}" \
+              " --extra-arg=-I{}" \
               " {}/main.cpp".format(
               flex_reflect_plugin_file, cling_includes, clang_includes, self.source_folder)
             self.output.info('flextool_cmd = %s' % (flextool_cmd))
