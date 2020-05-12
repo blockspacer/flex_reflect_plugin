@@ -632,6 +632,11 @@ class AnnotationMethod
     } // for
   }
 
+  /**
+    * Provided annotation methods
+    * - Call function (arbitrary logic) by some name
+    * - Execute C++ code at runtime using Cling C++ interpreter
+    **/
   void handle_event_RegisterAnnotationMethods(
     const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event)
   {
