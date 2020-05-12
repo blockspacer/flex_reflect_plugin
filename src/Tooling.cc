@@ -1,4 +1,4 @@
-#include <flex_meta_plugin/Tooling.hpp> // IWYU pragma: associated
+#include <flex_reflect_plugin/Tooling.hpp> // IWYU pragma: associated
 
 #include <flexlib/ToolPlugin.hpp>
 #include <flexlib/core/errors/errors.hpp>
@@ -12,7 +12,7 @@
 #include <flexlib/matchers/annotation_matcher.hpp>
 #include <flexlib/options/ctp/options.hpp>
 #if defined(CLING_IS_ON)
-#include "flexlib/ClingInterpreterModule.hpp>
+#include "flexlib/ClingInterpreterModule.hpp"
 #endif // CLING_IS_ON
 
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -31,12 +31,20 @@
 namespace plugin {
 
 Tooling::Tooling(
+  const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
-  ::cling_utils::ClingInterpreter* clingInterpreter
+  , ::cling_utils::ClingInterpreter* clingInterpreter
 #endif // CLING_IS_ON
 ) : clingInterpreter_(clingInterpreter)
 {
   DCHECK(clingInterpreter_);
+
+  DCHECK(event.sourceTransformPipeline);
+  ::clang_utils::SourceTransformPipeline& sourceTransformPipeline
+    = *event.sourceTransformPipeline;
+
+  sourceTransformRules_
+    = &sourceTransformPipeline.sourceTransformRules;
 
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }

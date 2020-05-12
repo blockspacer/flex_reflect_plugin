@@ -4,7 +4,7 @@
 
 #include <flexlib/ToolPlugin.hpp>
 #if defined(CLING_IS_ON)
-#include "flexlib/ClingInterpreterModule.hpp>
+#include "flexlib/ClingInterpreterModule.hpp"
 #endif // CLING_IS_ON
 
 #include <base/logging.h>
@@ -31,8 +31,6 @@ public:
 
 private:
   std::unique_ptr<Tooling> tooling_;
-
-  ::clang_utils::SourceTransformRules* sourceTransformRules_;
 
 #if defined(CLING_IS_ON)
   ::cling_utils::ClingInterpreter* clingInterpreter_;

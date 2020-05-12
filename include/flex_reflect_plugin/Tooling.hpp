@@ -3,7 +3,7 @@
 #include <flexlib/clangUtils.hpp>
 #include <flexlib/ToolPlugin.hpp>
 #if defined(CLING_IS_ON)
-#include "flexlib/ClingInterpreterModule.hpp>
+#include "flexlib/ClingInterpreterModule.hpp"
 #endif // CLING_IS_ON
 
 #include <base/logging.h>
@@ -14,8 +14,9 @@ namespace plugin {
 class Tooling {
 public:
   Tooling(
+    const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
-    ::cling_utils::ClingInterpreter* clingInterpreter
+    , ::cling_utils::ClingInterpreter* clingInterpreter
 #endif // CLING_IS_ON
   );
 
@@ -58,7 +59,7 @@ public:
     , const clang::Decl* nodeDecl);
 
 private:
-  Tooling tooling{};
+  ::clang_utils::SourceTransformRules* sourceTransformRules_;
 
 #if defined(CLING_IS_ON)
   ::cling_utils::ClingInterpreter* clingInterpreter_;

@@ -92,18 +92,18 @@ class FlexReflect
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
         .disconnect<
-          &FlexReflect::StringCommand>(&eventHandler_);
+          &EventHandler::StringCommand>(&eventHandler_);
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterAnnotationMethods>()
         .disconnect<
-          &FlexReflect::RegisterAnnotationMethods>(&eventHandler_);
+          &EventHandler::RegisterAnnotationMethods>(&eventHandler_);
 
 #if defined(CLING_IS_ON)
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterClingInterpreter>()
         .disconnect<
-          &FlexReflect::RegisterClingInterpreter>(&eventHandler_);
+          &EventHandler::RegisterClingInterpreter>(&eventHandler_);
 #endif // CLING_IS_ON
   }
 

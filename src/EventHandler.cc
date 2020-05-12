@@ -1,4 +1,4 @@
-#include <flex_meta_plugin/EventHandler.hpp> // IWYU pragma: associated
+#include <flex_reflect_plugin/EventHandler.hpp> // IWYU pragma: associated
 
 #include <flexlib/ToolPlugin.hpp>
 #include <flexlib/core/errors/errors.hpp>
@@ -12,7 +12,7 @@
 #include <flexlib/matchers/annotation_matcher.hpp>
 #include <flexlib/options/ctp/options.hpp>
 #if defined(CLING_IS_ON)
-#include "flexlib/ClingInterpreterModule.hpp>
+#include "flexlib/ClingInterpreterModule.hpp"
 #endif // CLING_IS_ON
 
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -93,21 +93,15 @@ void EventHandler::RegisterAnnotationMethods(
 #endif // CLING_IS_ON
 
   tooling_ = std::make_unique<Tooling>(
+    event
 #if defined(CLING_IS_ON)
-    clingInterpreter_
+    , clingInterpreter_
 #endif // CLING_IS_ON
   );
 
   DCHECK(event.annotationMethods);
   ::flexlib::AnnotationMethods& annotationMethods
     = *event.annotationMethods;
-
-  DCHECK(event.sourceTransformPipeline);
-  ::clang_utils::SourceTransformPipeline& sourceTransformPipeline
-    = *event.sourceTransformPipeline;
-
-  sourceTransformRules_
-    = &sourceTransformPipeline.sourceTransformRules;
 
   // evaluates arbitrary C++ code line
   // does not support newline characters or spaces
