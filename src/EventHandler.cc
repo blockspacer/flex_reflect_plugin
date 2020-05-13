@@ -44,17 +44,17 @@ static const std::string kVersionCommand = "/version";
 
 } // namespace
 
-EventHandler::EventHandler()
+FlexReflectEventHandler::FlexReflectEventHandler()
 {
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
-EventHandler::~EventHandler()
+FlexReflectEventHandler::~FlexReflectEventHandler()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
-void EventHandler::StringCommand(
+void FlexReflectEventHandler::StringCommand(
   const ::plugin::ToolPlugin::Events::StringCommand& event)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -81,7 +81,7 @@ void EventHandler::StringCommand(
   * - Call function (arbitrary logic) by some name
   * - Execute C++ code at runtime using Cling C++ interpreter
   **/
-void EventHandler::RegisterAnnotationMethods(
+void FlexReflectEventHandler::RegisterAnnotationMethods(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -103,31 +103,6 @@ void EventHandler::RegisterAnnotationMethods(
   ::flexlib::AnnotationMethods& annotationMethods
     = *event.annotationMethods;
 
-  // evaluates arbitrary C++ code line
-  // does not support newline characters or spaces
-  // may use `#include` or preprocessor macros
-  // example:
-  //   $executeStringWithoutSpaces("#include <cling/Interpreter/Interpreter.h>")
-  // if you need to execute multiline C++ code line - use "executeCode"
-  /**
-    EXAMPLE:
-      // will be replaced with empty string
-      __attribute__((annotate("{gen};{executeStringWithoutSpaces};\
-      printf(\"Hello world!\");"))) \
-      int SOME_UNIQUE_NAME0
-      ;
-      // if nothing printed, then
-      // replace printf with
-      // LOG(INFO)<<\"Hello!\";"))) \
-  **/
-  {
-    CHECK(tooling_);
-    annotationMethods["{executeStringWithoutSpaces};"] =
-      base::BindRepeating(
-        &Tooling::executeStringWithoutSpaces
-        , base::Unretained(tooling_.get()));
-  }
-
   // exports arbitrary C++ code, code can be multiline
   // unable to use `#include` or preprocessor macros
   /**
@@ -142,6 +117,9 @@ void EventHandler::RegisterAnnotationMethods(
       // LOG(INFO)<<\"Hello!\";"))) \
   **/
   {
+    VLOG(9)
+      << "registered annotation method:"
+         " executeCode";
     CHECK(tooling_);
     annotationMethods["{executeCode};"] =
       base::BindRepeating(
@@ -159,6 +137,9 @@ void EventHandler::RegisterAnnotationMethods(
       ;
   **/
   {
+    VLOG(9)
+      << "registered annotation method:"
+         " executeCodeAndReplace";
     CHECK(tooling_);
     annotationMethods["{executeCodeAndReplace};"] =
       base::BindRepeating(
@@ -185,16 +166,19 @@ void EventHandler::RegisterAnnotationMethods(
       // handler for make_reflect must be registered by plugin!
   **/
   {
+    VLOG(9)
+      << "registered annotation method:"
+         " funccall";
     CHECK(tooling_);
     annotationMethods["{funccall};"] =
       base::BindRepeating(
-        &Tooling::funccall
+        &Tooling::callFuncBySignature
         , base::Unretained(tooling_.get()));
   }
 }
 
 #if defined(CLING_IS_ON)
-void EventHandler::RegisterClingInterpreter(
+void FlexReflectEventHandler::RegisterClingInterpreter(
   const ::plugin::ToolPlugin::Events::RegisterClingInterpreter& event)
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);

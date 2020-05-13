@@ -30,6 +30,17 @@
 
 namespace plugin {
 
+namespace {
+
+template<class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
+{
+    copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
+    return os;
+}
+
+} // namespace
+
 Tooling::Tooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
@@ -52,61 +63,6 @@ Tooling::Tooling(
 Tooling::~Tooling()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-}
-
-void Tooling::executeStringWithoutSpaces(
-  const std::string& processedAnnotaion
-  , clang::AnnotateAttr* annotateAttr
-  , const clang_utils::MatchResult& matchResult
-  , clang::Rewriter& rewriter
-  , const clang::Decl* nodeDecl)
-{
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  TRACE_EVENT0("toplevel",
-               "plugin::FlexReflect::process_executeStringWithoutSpaces");
-
-#if defined(CLING_IS_ON)
-  DCHECK(clingInterpreter_);
-#endif // CLING_IS_ON
-
-  DLOG(INFO)
-    << "started processing of annotation: "
-    << processedAnnotaion;
-
-#if defined(CLING_IS_ON)
-  // execute code stored in annotation
-  {
-    cling::Interpreter::CompilationResult compilationResult
-      = clingInterpreter_->executeCodeNoResult(processedAnnotaion);
-    if(compilationResult
-       != cling::Interpreter::Interpreter::kSuccess)
-    {
-      LOG(ERROR)
-        << "ERROR while running cling code:"
-        << processedAnnotaion.substr(0, 1000);
-    }
-  }
-
-  // remove annotation from source file
-  {
-    clang::SourceLocation startLoc = nodeDecl->getLocStart();
-    // Note Stmt::getLocEnd() returns the source location prior to the
-    // token at the end of the line.  For instance, for:
-    // var = 123;
-    //      ^---- getLocEnd() points here.
-    clang::SourceLocation endLoc = nodeDecl->getLocEnd();
-
-    clang_utils::expandLocations(startLoc, endLoc, rewriter);
-
-    rewriter.ReplaceText(
-      clang::SourceRange(startLoc, endLoc)
-      , "");
-  }
-#else
-LOG(WARNING)
-  << "Unable to execute C++ code at runtime: "
-  << "Cling is disabled.";
-#endif // CLING_IS_ON
 }
 
 void Tooling::executeCode(
@@ -162,9 +118,9 @@ void Tooling::executeCode(
   }
 
 #else
-LOG(WARNING)
-  << "Unable to execute C++ code at runtime: "
-  << "Cling is disabled.";
+  LOG(WARNING)
+    << "Unable to execute C++ code at runtime: "
+    << "Cling is disabled.";
 #endif // CLING_IS_ON
 }
 
@@ -278,13 +234,13 @@ void Tooling::executeCodeAndReplace(
     }
   }
 #else
-LOG(WARNING)
-  << "Unable to execute C++ code at runtime: "
-  << "Cling is disabled.";
+  LOG(WARNING)
+    << "Unable to execute C++ code at runtime: "
+    << "Cling is disabled.";
 #endif // CLING_IS_ON
 }
 
-void Tooling::funccall(
+void Tooling::callFuncBySignature(
   const std::string& processedAnnotaion
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
@@ -293,7 +249,7 @@ void Tooling::funccall(
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   TRACE_EVENT0("toplevel",
-               "plugin::FlexReflect::process_funccall");
+               "plugin::FlexReflect::callFuncBySignature");
 
 #if defined(CLING_IS_ON)
   DCHECK(clingInterpreter_);
@@ -343,6 +299,14 @@ void Tooling::funccall(
         LOG(WARNING)
           << "Unable to find callback for source transform rule: "
           << func_to_call.func_with_args_as_string_;
+        std::vector<std::string> registeredRules;
+        registeredRules.reserve(sourceTransformRules_->size());
+        for(const auto& rule: (*sourceTransformRules_)) {
+          registeredRules.push_back(rule.first);
+        }
+        VLOG(1)
+          << "Registered source transform rules: "
+          << registeredRules;
         continue;
       }
 

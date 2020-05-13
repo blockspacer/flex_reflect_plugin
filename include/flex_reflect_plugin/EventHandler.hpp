@@ -12,11 +12,11 @@
 
 namespace plugin {
 
-class EventHandler {
+class FlexReflectEventHandler {
 public:
-  EventHandler();
+  FlexReflectEventHandler();
 
-  ~EventHandler();
+  ~FlexReflectEventHandler();
 
   void StringCommand(
     const ::plugin::ToolPlugin::Events::StringCommand& event);
@@ -38,7 +38,7 @@ private:
 
   SEQUENCE_CHECKER(sequence_checker_);
 
-  DISALLOW_COPY_AND_ASSIGN(EventHandler);
+  DISALLOW_COPY_AND_ASSIGN(FlexReflectEventHandler);
 };
 
 } // namespace plugin

@@ -92,18 +92,18 @@ class FlexReflect
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
         .disconnect<
-          &EventHandler::StringCommand>(&eventHandler_);
+          &FlexReflectEventHandler::StringCommand>(&eventHandler_);
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterAnnotationMethods>()
         .disconnect<
-          &EventHandler::RegisterAnnotationMethods>(&eventHandler_);
+          &FlexReflectEventHandler::RegisterAnnotationMethods>(&eventHandler_);
 
 #if defined(CLING_IS_ON)
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterClingInterpreter>()
         .disconnect<
-          &EventHandler::RegisterClingInterpreter>(&eventHandler_);
+          &FlexReflectEventHandler::RegisterClingInterpreter>(&eventHandler_);
 #endif // CLING_IS_ON
   }
 
@@ -116,18 +116,18 @@ class FlexReflect
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::StringCommand>()
-        .connect<&EventHandler::StringCommand>(&eventHandler_);
+        .connect<&FlexReflectEventHandler::StringCommand>(&eventHandler_);
 
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterAnnotationMethods>()
         .connect<
-          &EventHandler::RegisterAnnotationMethods>(&eventHandler_);
+          &FlexReflectEventHandler::RegisterAnnotationMethods>(&eventHandler_);
 
 #if defined(CLING_IS_ON)
     event_dispatcher.sink<
       ::plugin::ToolPlugin::Events::RegisterClingInterpreter>()
         .connect<
-          &EventHandler::RegisterClingInterpreter>(&eventHandler_);
+          &FlexReflectEventHandler::RegisterClingInterpreter>(&eventHandler_);
 #endif // CLING_IS_ON
   }
 
@@ -148,7 +148,7 @@ class FlexReflect
   }
 
 private:
-  EventHandler eventHandler_{};
+  FlexReflectEventHandler eventHandler_{};
 
   DISALLOW_COPY_AND_ASSIGN(FlexReflect);
 };

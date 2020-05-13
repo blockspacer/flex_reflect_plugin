@@ -24,15 +24,6 @@ public:
 
   // execute code in Cling C++ interpreter
   // old code (executed code) may be replaced with ""
-  void executeStringWithoutSpaces(
-    const std::string& processedAnnotaion
-    , clang::AnnotateAttr* annotateAttr
-    , const clang_utils::MatchResult& matchResult
-    , clang::Rewriter& rewriter
-    , const clang::Decl* nodeDecl);
-
-  // execute code in Cling C++ interpreter
-  // old code (executed code) may be replaced with ""
   void executeCode(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
@@ -51,7 +42,7 @@ public:
 
   // call some function (argitrary logic) by name.
   // can accept arguments
-  void funccall(
+  void callFuncBySignature(
     const std::string& processedAnnotaion
     , clang::AnnotateAttr* annotateAttr
     , const clang_utils::MatchResult& matchResult
