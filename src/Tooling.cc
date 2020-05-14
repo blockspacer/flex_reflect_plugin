@@ -66,7 +66,7 @@ Tooling::~Tooling()
 }
 
 void Tooling::executeCode(
-  const std::string& processedAnnotaion
+  const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
   , clang::Rewriter& rewriter
@@ -81,20 +81,20 @@ void Tooling::executeCode(
 #endif // CLING_IS_ON
 
   DLOG(INFO) << "started processing of annotation: "
-               << processedAnnotaion;
+               << processedAnnotation;
 
 #if defined(CLING_IS_ON)
   // execute code stored in annotation
   {
     cling::Interpreter::CompilationResult compilationResult
       = clingInterpreter_->executeCodeNoResult(
-          processedAnnotaion);
+          processedAnnotation);
     if(compilationResult
        != cling::Interpreter::Interpreter::kSuccess)
     {
       LOG(ERROR)
         << "ERROR while running cling code:"
-        << processedAnnotaion.substr(0, 1000);
+        << processedAnnotation.substr(0, 1000);
     }
   }
 
@@ -125,7 +125,7 @@ void Tooling::executeCode(
 }
 
 void Tooling::executeCodeAndReplace(
-  const std::string& processedAnnotaion
+  const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
   , clang::Rewriter& rewriter
@@ -141,7 +141,7 @@ void Tooling::executeCodeAndReplace(
 
   DLOG(INFO)
     << "started processing of annotation: "
-    << processedAnnotaion;
+    << processedAnnotation;
 
 #if defined(CLING_IS_ON)
   std::ostringstream sstr;
@@ -176,7 +176,7 @@ void Tooling::executeCodeAndReplace(
 
     // vars end
     sstr << "return ";
-    sstr << processedAnnotaion << ";";
+    sstr << processedAnnotation << ";";
 
     // scope end
     sstr << "}();";
@@ -193,7 +193,7 @@ void Tooling::executeCodeAndReplace(
     {
       LOG(ERROR)
         << "ERROR while running cling code:"
-        << processedAnnotaion.substr(0, 1000);
+        << processedAnnotation.substr(0, 1000);
     }
   }
 
@@ -229,7 +229,7 @@ void Tooling::executeCodeAndReplace(
     } else {
       DLOG(INFO) << "ignored invalid "
                     "Cling result "
-                    "for processedAnnotaion: "
+                    "for processedAnnotation: "
                     << sstr.str();
     }
   }
@@ -241,7 +241,7 @@ void Tooling::executeCodeAndReplace(
 }
 
 void Tooling::callFuncBySignature(
-  const std::string& processedAnnotaion
+  const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
   , clang::Rewriter& rewriter
@@ -258,7 +258,7 @@ void Tooling::callFuncBySignature(
   std::vector<::flexlib::parsed_func> funcs_to_call;
   std::vector<::flexlib::parsed_func> parsedFuncs;
 
-  parsedFuncs = ::flexlib::split_to_funcs(processedAnnotaion);
+  parsedFuncs = ::flexlib::split_to_funcs(processedAnnotation);
 
   for (const ::flexlib::parsed_func & seg : parsedFuncs) {
       VLOG(9) << "segment: " << seg.func_with_args_as_string_;
@@ -284,7 +284,7 @@ void Tooling::callFuncBySignature(
 
   DLOG(INFO)
     << "generator for code: "
-    << processedAnnotaion;
+    << processedAnnotation;
 
   for (const ::flexlib::parsed_func& func_to_call : funcs_to_call) {
       VLOG(9) << "main_module task "
