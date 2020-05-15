@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
 
 } // namespace
 
-Tooling::Tooling(
+ReflectTooling::ReflectTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
   , ::cling_utils::ClingInterpreter* clingInterpreter
@@ -60,12 +60,12 @@ Tooling::Tooling(
   DETACH_FROM_SEQUENCE(sequence_checker_);
 }
 
-Tooling::~Tooling()
+ReflectTooling::~ReflectTooling()
 {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 }
 
-void Tooling::executeCode(
+void ReflectTooling::executeCode(
   const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
@@ -124,7 +124,7 @@ void Tooling::executeCode(
 #endif // CLING_IS_ON
 }
 
-void Tooling::executeCodeAndReplace(
+void ReflectTooling::executeCodeAndReplace(
   const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
@@ -240,7 +240,7 @@ void Tooling::executeCodeAndReplace(
 #endif // CLING_IS_ON
 }
 
-void Tooling::callFuncBySignature(
+void ReflectTooling::callFuncBySignature(
   const std::string& processedAnnotation
   , clang::AnnotateAttr* annotateAttr
   , const clang_utils::MatchResult& matchResult
