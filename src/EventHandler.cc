@@ -92,7 +92,7 @@ void FlexReflectEventHandler::RegisterAnnotationMethods(
   DCHECK(clingInterpreter_);
 #endif // CLING_IS_ON
 
-  tooling_ = std::make_unique<Tooling>(
+  tooling_ = std::make_unique<ReflectTooling>(
     event
 #if defined(CLING_IS_ON)
     , clingInterpreter_
@@ -123,7 +123,7 @@ void FlexReflectEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     annotationMethods["{executeCode};"] =
       base::BindRepeating(
-        &Tooling::executeCode
+        &ReflectTooling::executeCode
         , base::Unretained(tooling_.get()));
   }
 
@@ -143,7 +143,7 @@ void FlexReflectEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     annotationMethods["{executeCodeAndReplace};"] =
       base::BindRepeating(
-        &Tooling::executeCodeAndReplace
+        &ReflectTooling::executeCodeAndReplace
         , base::Unretained(tooling_.get()));
   }
 
@@ -172,7 +172,7 @@ void FlexReflectEventHandler::RegisterAnnotationMethods(
     CHECK(tooling_);
     annotationMethods["{funccall};"] =
       base::BindRepeating(
-        &Tooling::callFuncBySignature
+        &ReflectTooling::callFuncBySignature
         , base::Unretained(tooling_.get()));
   }
 }
