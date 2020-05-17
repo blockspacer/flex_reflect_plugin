@@ -13,16 +13,23 @@ set(LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
-set(BUILD_SHARED_LIBS
+# Hack to depend NOT on CONAN_PKG::libname, but on libname directly
+# See for details
+# https://docs.conan.io/en/latest/developing_packages/workspaces.html
+set(LOCAL_BUILD FALSE CACHE BOOL "LOCAL_BUILD")
+message(STATUS "LOCAL_BUILD=${LOCAL_BUILD}")
+
+set(${PROJECT_NAME}_BUILD_SHARED_LIBS
   TRUE CACHE BOOL
   "Use .so/.dll")
 
-if(BUILD_SHARED_LIBS)
+message(STATUS "${PROJECT_NAME}_BUILD_SHARED_LIBS = ${${PROJECT_NAME}_BUILD_SHARED_LIBS}")
+if(${PROJECT_NAME}_BUILD_SHARED_LIBS)
   set(CORE_LIB_TYPE SHARED)
 else()
   set(CORE_LIB_TYPE STATIC)
   message(FATAL_ERROR "ONLY SHARED PLUGINS SUPPORTED FOR NOW")
-endif(BUILD_SHARED_LIBS)
+endif(${PROJECT_NAME}_BUILD_SHARED_LIBS)
 
 set(ENABLE_CLING TRUE CACHE BOOL "ENABLE_CLING")
 message(STATUS "ENABLE_CLING=${ENABLE_CLING}")
@@ -183,7 +190,6 @@ if(NOT TARGET CONAN_PKG::clang_folly_conan)
   message(FATAL_ERROR "Use clang_folly_conan from conan")
 endif()
 
-
 if(NOT TARGET CONAN_PKG::chromium_build_util)
   message(FATAL_ERROR "Use chromium_build_util from conan")
 endif()
@@ -236,11 +242,11 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(flex_reflect_plugin_include_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/flex_reflect_plugin")
 set(flex_reflect_plugin_src_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-include(cmake/PlatformChecks)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformChecks.cmake)
 
-include(cmake/CommonOptions)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommonOptions.cmake)
 
-include(cmake/ProjectFiles)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectFiles.cmake)
 
 add_library(${LIB_NAME}-test-includes INTERFACE)
 
@@ -258,6 +264,7 @@ endmacro(add_relative_include_dir)
 # NOTE: cling does not support static libs, so we use SHARED
 # https://github.com/root-project/cling/issues/280
 # https://gitlab.kitware.com/cmake/cmake/issues/16473
+message(STATUS "flex_reflect_plugin_SOURCES=${flex_reflect_plugin_SOURCES}")
 add_library(${LIB_NAME} ${CORE_LIB_TYPE}
   ${flex_reflect_plugin_SOURCES}
 )
@@ -275,8 +282,13 @@ if(NOT TARGET CONAN_PKG::flexlib)
   message(FATAL_ERROR "Use flexlib from conan")
 endif()
 
+set(flexlib CONAN_PKG::flexlib)
+if(LOCAL_BUILD)
+  set(flexlib flexlib)
+endif(LOCAL_BUILD)
+
 list(APPEND USED_3DPARTY_LIBS
-  CONAN_PKG::flexlib
+  ${flexlib}
   CONAN_PKG::basis
   CONAN_PKG::clang_folly_conan
   CONAN_PKG::boost
@@ -327,9 +339,14 @@ set(USED_SYSTEM_LIBS
     ${LIBLZMA_LIBRARIES} # used by folly
     CACHE INTERNAL "USED_SYSTEM_LIBS")
 
+message(STATUS "flex_reflect_plugin USED_3DPARTY_LIBS=${USED_3DPARTY_LIBS}")
 target_link_libraries(${LIB_NAME} PUBLIC#PRIVATE
   ${USED_3DPARTY_LIBS}
   ${USED_SYSTEM_LIBS}
+)
+
+target_link_libraries(${LIB_NAME} PRIVATE
+  CONAN_PKG::entt
 )
 
 set(DEBUG_LIBRARY_SUFFIX "")
@@ -405,7 +422,7 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 )
 
 # install and export steps
-include(cmake/Exports)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
 if(ENABLE_TESTS)
   add_subdirectory( tests )

@@ -182,6 +182,11 @@ class flex_reflect_plugin_conan_project(conan_build_helper.CMakePackage):
 
       self.requires("flextool/master@conan/stable")
 
+      # \note dispatcher must be thread-safe,
+      # so use entt after patch https://github.com/skypjack/entt/issues/449
+      # see https://github.com/skypjack/entt/commit/74f3df83dbc9fc4b43b8cfb9d71ba02234bd5c4a
+      self.requires("entt/3.3.2")
+
     def _configure_cmake(self):
         cmake = CMake(self)
         cmake.parallel = True
@@ -191,10 +196,10 @@ class flex_reflect_plugin_conan_project(conan_build_helper.CMakePackage):
 
         self.output.info(self.options)
         if self.options.shared:
-          self.output.info('Enabled BUILD_SHARED_LIBS')
-          cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
+          self.output.info('Enabled flex_reflect_plugin_BUILD_SHARED_LIBS')
+          cmake.definitions["flex_reflect_plugin_BUILD_SHARED_LIBS"] = "ON"
         else:
-          self.output.error('Disabled BUILD_SHARED_LIBS')
+          self.output.error('Disabled flex_reflect_plugin_BUILD_SHARED_LIBS')
 
         self.add_cmake_option(cmake, "ENABLE_TESTS", self._is_tests_enabled())
 
