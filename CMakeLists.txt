@@ -115,8 +115,7 @@ message(STATUS "${FetchContent_conan_auto_install}_SOURCE_DIR = ${${FetchContent
 message(STATUS "${FetchContent_conan_auto_install}_BINARY_DIR = ${${FetchContent_conan_auto_install}_BINARY_DIR}")
 include(${${FetchContent_conan_auto_install}_SOURCE_DIR}/conan-auto-install.cmake)
 option(CONAN_AUTO_INSTALL "Let CMake call conan install automatically"
-  #OFF # disable by default cause llvm requires long build with CONAN_LLVM_SINGLE_THREAD_BUILD=1
-  ON
+  OFF
 )
 set(CONAN_FORCE_AUTO_INSTALL
   "" # may be changed to "FORCE"
@@ -281,7 +280,6 @@ list(APPEND USED_3DPARTY_LIBS
 if(NOT TARGET CONAN_PKG::flexlib)
   message(FATAL_ERROR "Use flexlib from conan")
 endif()
-
 set(flexlib CONAN_PKG::flexlib)
 if(LOCAL_BUILD)
   set(flexlib flexlib)
@@ -423,6 +421,22 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 
 # install and export steps
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
+
+if(LOCAL_BUILD)
+  # for builds with conan workspace
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
+            ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
+  )
+endif(LOCAL_BUILD)
+
+# for builds without conan
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
+          ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}.conf
+)
 
 if(ENABLE_TESTS)
   add_subdirectory( tests )

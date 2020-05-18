@@ -31,6 +31,10 @@
 
 #include <type_traits>
 
+#if !defined(CORRADE_DYNAMIC_PLUGIN)
+#error "plugin must be shared library with CORRADE_DYNAMIC_PLUGIN=1"
+#endif  // CORRADE_DYNAMIC_PLUGIN
+
 namespace plugin {
 
 /// \note class name must not collide with
