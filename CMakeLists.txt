@@ -277,25 +277,19 @@ list(APPEND USED_3DPARTY_LIBS
   ${build_util_LIB}
 )
 
-if(NOT TARGET CONAN_PKG::flexlib)
-  message(FATAL_ERROR "Use flexlib from conan")
+find_package(flexlib REQUIRED)
+if(${flexlib_HEADER_DIR} STREQUAL "")
+  message(FATAL_ERROR "unable to find flexlib_HEADER_DIR")
 endif()
-set(flexlib CONAN_PKG::flexlib)
-if(${PROJECT_NAME}_LOCAL_BUILD)
-  set(flexlib flexlib)
-endif(${PROJECT_NAME}_LOCAL_BUILD)
 
-if(NOT TARGET CONAN_PKG::basis)
-  message(FATAL_ERROR "Use basis from conan")
+find_package(basis REQUIRED)
+if(${basis_HEADER_DIR} STREQUAL "")
+  message(FATAL_ERROR "unable to find basis_HEADER_DIR")
 endif()
-set(basis CONAN_PKG::basis)
-if(basis_LOCAL_BUILD)
-  set(basis basis)
-endif(basis_LOCAL_BUILD)
 
 list(APPEND USED_3DPARTY_LIBS
-  ${flexlib}
-  ${basis}
+  ${flexlib_LIB}
+  ${basis_LIB}
   CONAN_PKG::clang_folly_conan
   CONAN_PKG::boost
   CONAN_PKG::double-conversion
