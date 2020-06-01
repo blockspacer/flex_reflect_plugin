@@ -16,8 +16,8 @@ option(ENABLE_TESTS "Enable tests" OFF)
 # Hack to depend NOT on CONAN_PKG::libname, but on libname directly
 # See for details
 # https://docs.conan.io/en/latest/developing_packages/workspaces.html
-set(LOCAL_BUILD FALSE CACHE BOOL "LOCAL_BUILD")
-message(STATUS "LOCAL_BUILD=${LOCAL_BUILD}")
+set(${PROJECT_NAME}_LOCAL_BUILD FALSE CACHE BOOL "${PROJECT_NAME}_LOCAL_BUILD")
+message(STATUS "${PROJECT_NAME}_LOCAL_BUILD=${${PROJECT_NAME}_LOCAL_BUILD}")
 
 set(${PROJECT_NAME}_BUILD_SHARED_LIBS
   TRUE CACHE BOOL
@@ -281,13 +281,21 @@ if(NOT TARGET CONAN_PKG::flexlib)
   message(FATAL_ERROR "Use flexlib from conan")
 endif()
 set(flexlib CONAN_PKG::flexlib)
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   set(flexlib flexlib)
-endif(LOCAL_BUILD)
+endif(${PROJECT_NAME}_LOCAL_BUILD)
+
+if(NOT TARGET CONAN_PKG::basis)
+  message(FATAL_ERROR "Use basis from conan")
+endif()
+set(basis CONAN_PKG::basis)
+if(basis_LOCAL_BUILD)
+  set(basis basis)
+endif(basis_LOCAL_BUILD)
 
 list(APPEND USED_3DPARTY_LIBS
   ${flexlib}
-  CONAN_PKG::basis
+  ${basis}
   CONAN_PKG::clang_folly_conan
   CONAN_PKG::boost
   CONAN_PKG::double-conversion
@@ -423,14 +431,14 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 # install and export steps
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
-if(LOCAL_BUILD)
+if(${PROJECT_NAME}_LOCAL_BUILD)
   # for builds with conan workspace
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
             ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
   )
-endif(LOCAL_BUILD)
+endif(${PROJECT_NAME}_LOCAL_BUILD)
 
 # for builds without conan
 execute_process(
