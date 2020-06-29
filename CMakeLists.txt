@@ -422,6 +422,11 @@ target_compile_definitions(${LIB_NAME} PUBLIC
   ${CLING_DEFINITIONS}
 )
 
+# TODO: DISABLE_DOCTEST
+target_compile_definitions(${LIB_NAME} PUBLIC
+  DISABLE_DOCTEST=1
+)
+
 # install and export steps
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 

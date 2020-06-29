@@ -223,16 +223,18 @@ endif()
 #message(FATAL_ERROR ${UNIT_TEST_SOURCE_LIST})
 
 # "gmock" is one of test program names
-add_custom_command( TARGET ${ROOT_PROJECT_NAME}-gmock POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory
-                        ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_BINARY_DIR}/bin/$<CONFIG>/tests/data )
+add_custom_command( TARGET ${ROOT_PROJECT_NAME}-gmock
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/data
+    ${CMAKE_BINARY_DIR}/bin/$<CONFIG>/tests/data )
 
 enable_testing()
 
 # Run ALL tests with verbose output
 # Usage: cmake --build build --target ${ROOT_PROJECT_NAME}_run_all_tests
 add_custom_target(${ROOT_PROJECT_NAME}_run_all_tests
-    DEPENDS ${ROOT_PROJECT_LIB} ${ALL_TESTS_LIST_VERBOSE}
+  DEPENDS ${ROOT_PROJECT_LIB} ${ALL_TESTS_LIST_VERBOSE}
 )
 foreach(target IN LISTS ALL_TESTS_LIST_VERBOSE)
   add_dependencies(${ROOT_PROJECT_NAME}_run_all_tests ${target})
