@@ -27,7 +27,8 @@ set(flex_reflect_plugin_FILE
 set(flex_reflect_plugin_HEADER_DIR
   ${CONAN_FLEX_REFLECT_PLUGIN_ROOT}/include
 )
-if(flex_reflect_plugin_LOCAL_BUILD)
+# used by https://docs.conan.io/en/latest/developing_packages/workspaces.html
+if(TARGET flex_reflect_plugin)
   # name of created target
   set(flex_reflect_plugin_LIB
     flex_reflect_plugin
@@ -44,11 +45,14 @@ if(flex_reflect_plugin_LOCAL_BUILD)
   set(flex_reflect_plugin_FILE
     ${flex_reflect_plugin_LIBRARY_OUTPUT_DIRECTORY}/flex_reflect_plugin${CMAKE_SHARED_LIBRARY_SUFFIX}
   )
-else()
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/cmake/flex_reflect_plugin-config.cmake")
   # uses Config.cmake or a -config.cmake file
   # see https://gitlab.kitware.com/cmake/community/wikis/doc/tutorials/How-to-create-a-ProjectConfig.cmake-file
   # BELOW MUST BE EQUAL TO find_package(... CONFIG REQUIRED)
   # NOTE: find_package(CONFIG) not supported with EMSCRIPTEN, so use include()
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/flex_reflect_plugin-config.cmake)
-endif(flex_reflect_plugin_LOCAL_BUILD)
+endif()
+
 message(STATUS "flex_reflect_plugin_HEADER_DIR=${flex_reflect_plugin_HEADER_DIR}")
