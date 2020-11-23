@@ -30,17 +30,6 @@
 
 namespace plugin {
 
-namespace {
-
-template<class T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
-{
-    copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
-    return os;
-}
-
-} // namespace
-
 ReflectTooling::ReflectTooling(
   const ::plugin::ToolPlugin::Events::RegisterAnnotationMethods& event
 #if defined(CLING_IS_ON)
@@ -303,10 +292,10 @@ void ReflectTooling::callFuncBySignature(
         registeredRules.reserve(sourceTransformRules_->size());
         for(const auto& rule: (*sourceTransformRules_)) {
           registeredRules.push_back(rule.first);
+          VLOG(1)
+            << "Registered source transform rule: "
+            << rule.first;
         }
-        VLOG(1)
-          << "Registered source transform rules: "
-          << registeredRules;
         continue;
       }
 
