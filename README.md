@@ -11,8 +11,8 @@ Provides annotation methods. See [https://blockspacer.github.io/flex_docs/about/
 ## Installation
 
 ```bash
-export CXX=clang++-6.0
-export CC=clang-6.0
+export CXX=clang++-10
+export CC=clang-10
 
 # NOTE: change `build_type=Debug` to `build_type=Release` in production
 # NOTE: use --build=missing if you got error `ERROR: Missing prebuilt package`
