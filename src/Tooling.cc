@@ -89,12 +89,12 @@ void ReflectTooling::executeCode(
 
   // remove annotation from source file
   {
-    clang::SourceLocation startLoc = nodeDecl->getLocStart();
-    // Note Stmt::getLocEnd() returns the source location prior to the
+    clang::SourceLocation startLoc = nodeDecl->getBeginLoc();
+    // Note Stmt::getEndLoc() returns the source location prior to the
     // token at the end of the line.  For instance, for:
     // var = 123;
-    //      ^---- getLocEnd() points here.
-    clang::SourceLocation endLoc = nodeDecl->getLocEnd();
+    //      ^---- getEndLoc() points here.
+    clang::SourceLocation endLoc = nodeDecl->getEndLoc();
 
     clang_utils::expandLocations(startLoc, endLoc, rewriter);
 
@@ -189,12 +189,12 @@ void ReflectTooling::executeCodeAndReplace(
   // remove annotation from source file
   // replacing it with |cling::Value result|
   {
-    clang::SourceLocation startLoc = nodeDecl->getLocStart();
-    // Note Stmt::getLocEnd() returns the source location prior to the
+    clang::SourceLocation startLoc = nodeDecl->getBeginLoc();
+    // Note Stmt::getEndLoc() returns the source location prior to the
     // token at the end of the line.  For instance, for:
     // var = 123;
-    //      ^---- getLocEnd() points here.
-    clang::SourceLocation endLoc = nodeDecl->getLocEnd();
+    //      ^---- getEndLoc() points here.
+    clang::SourceLocation endLoc = nodeDecl->getEndLoc();
 
     clang_utils::expandLocations(startLoc, endLoc, rewriter);
 
@@ -312,12 +312,12 @@ void ReflectTooling::callFuncBySignature(
     // remove annotation from source file
     // replacing it with callback result
     {
-      clang::SourceLocation startLoc = nodeDecl->getLocStart();
-      // Note Stmt::getLocEnd() returns the source location prior to the
+      clang::SourceLocation startLoc = nodeDecl->getBeginLoc();
+      // Note Stmt::getEndLoc() returns the source location prior to the
       // token at the end of the line.  For instance, for:
       // var = 123;
-      //      ^---- getLocEnd() points here.
-      clang::SourceLocation endLoc = nodeDecl->getLocEnd();
+      //      ^---- getEndLoc() points here.
+      clang::SourceLocation endLoc = nodeDecl->getEndLoc();
 
       clang_utils::expandLocations(startLoc, endLoc, rewriter);
 

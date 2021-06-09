@@ -9,7 +9,7 @@ project(${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   LANGUAGES CXX C)
 
-set(LIB_NAME ${PROJECT_NAME})
+set(FLEX_REFLECT_LIB_NAME ${PROJECT_NAME})
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
@@ -169,6 +169,8 @@ find_package(cmake_build_options REQUIRED)
 setup_default_build_type(RELEASE)
 setup_cmake_build_options(RELEASE DEBUG)
 
+find_package(cmake_helper_utils REQUIRED)
+
 message(STATUS "Compiler ${CMAKE_CXX_COMPILER}, version: ${CMAKE_CXX_COMPILER_VERSION}")
 
 set_project_version(0 0 1) # from Utils.cmake
@@ -244,7 +246,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommonOptions.cmake)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectFiles.cmake)
 
-add_library(${LIB_NAME}-test-includes INTERFACE)
+add_library(${FLEX_REFLECT_LIB_NAME}-test-includes INTERFACE)
 
 # $<INSTALL_INTERFACE:...> is exported using install(EXPORT)
 # $<BUILD_INTERFACE:...> is exported using export(), or when the target is used by another target in the same buildsystem
@@ -253,7 +255,7 @@ macro(add_relative_include_dir TARGET VISIBILITY_BUILD VISIBILITY_INSTALL NEW_EL
     ${VISIBILITY_BUILD} "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${NEW_ELEM}>"
     ${VISIBILITY_INSTALL} "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/${NEW_ELEM}>"
   )
-  target_include_directories( ${LIB_NAME}-test-includes SYSTEM INTERFACE
+  target_include_directories( ${FLEX_REFLECT_LIB_NAME}-test-includes SYSTEM INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/${NEW_ELEM} )
 endmacro(add_relative_include_dir)
 
@@ -261,13 +263,13 @@ endmacro(add_relative_include_dir)
 # https://github.com/root-project/cling/issues/280
 # https://gitlab.kitware.com/cmake/cmake/issues/16473
 message(STATUS "flex_reflect_plugin_SOURCES=${flex_reflect_plugin_SOURCES}")
-add_library(${LIB_NAME} ${CORE_LIB_TYPE}
+add_library(${FLEX_REFLECT_LIB_NAME} ${CORE_LIB_TYPE}
   ${flex_reflect_plugin_SOURCES}
 )
 
-#add_relative_include_dir(${LIB_NAME} PRIVATE PRIVATE "include/flex_reflect_plugin")
+#add_relative_include_dir(${FLEX_REFLECT_LIB_NAME} PRIVATE PRIVATE "include/flex_reflect_plugin")
 
-add_relative_include_dir(${LIB_NAME} PUBLIC PUBLIC "include")
+add_relative_include_dir(${FLEX_REFLECT_LIB_NAME} PUBLIC PUBLIC "include")
 
 list(APPEND USED_3DPARTY_LIBS
   ${base_LIB}
@@ -294,12 +296,12 @@ list(APPEND USED_3DPARTY_LIBS
   ${USED_BOOST_LIBS}
 )
 
-set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${FLEX_REFLECT_LIB_NAME} PROPERTY CXX_STANDARD 17)
 
 if(TARGET_EMSCRIPTEN)
   # use PROPERTY CXX_STANDARD 17
 else()
-  target_compile_features(${LIB_NAME}
+  target_compile_features(${FLEX_REFLECT_LIB_NAME}
     PUBLIC cxx_auto_type
     PRIVATE cxx_variadic_templates)
 endif()
@@ -311,22 +313,22 @@ set(USED_SYSTEM_LIBS
     stdc++fs # C++17 std::filesystem
     CACHE INTERNAL "USED_SYSTEM_LIBS")
 
-target_link_libraries(${LIB_NAME} PUBLIC
+target_link_libraries(${FLEX_REFLECT_LIB_NAME} PUBLIC
   ${USED_3DPARTY_LIBS}
   ${USED_SYSTEM_LIBS}
 )
 
-target_link_libraries(${LIB_NAME} PRIVATE
+target_link_libraries(${FLEX_REFLECT_LIB_NAME} PRIVATE
   CONAN_PKG::entt
 )
 
 set(DEBUG_LIBRARY_SUFFIX "")
-set_target_properties(${LIB_NAME}
+set_target_properties(${FLEX_REFLECT_LIB_NAME}
   PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /lib
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" # TODO: /bin
-    OUTPUT_NAME "${LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
+    OUTPUT_NAME "${FLEX_REFLECT_LIB_NAME}$<$<CONFIG:Debug>:${DEBUG_LIBRARY_SUFFIX}>"
     # Plugins don't have any prefix (e.g. 'lib' on Linux)
     PREFIX ""
     ENABLE_EXPORTS 1
@@ -336,25 +338,25 @@ set_target_properties(${LIB_NAME}
 )
 
 # POSITION_INDEPENDENT_CODE for -fPIC
-set_property(TARGET ${LIB_NAME}
+set_property(TARGET ${FLEX_REFLECT_LIB_NAME}
   PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(ENABLE_CLING)
   find_package(Cling REQUIRED)
 
   list(APPEND CLING_DEFINITIONS CLING_IS_ON=1)
-  target_link_libraries(${LIB_NAME} PUBLIC#PRIVATE
+  target_link_libraries(${FLEX_REFLECT_LIB_NAME} PUBLIC#PRIVATE
     CONAN_PKG::cling_conan
   )
 
   get_target_property (cling_conan_IMPORTED_LOCATION CONAN_PKG::cling_conan INTERFACE_INCLUDE_DIRECTORIES)
   message( STATUS "cling_conan=${cling_conan_IMPORTED_LOCATION}" )
-  target_include_directories( ${LIB_NAME} PUBLIC ${cling_conan_IMPORTED_LOCATION} )
+  target_include_directories( ${FLEX_REFLECT_LIB_NAME} PUBLIC ${cling_conan_IMPORTED_LOCATION} )
 
   if(MSVC)
-    set_target_properties(${LIB_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+    set_target_properties(${FLEX_REFLECT_LIB_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
     set_property(
-      TARGET ${LIB_NAME}
+      TARGET ${FLEX_REFLECT_LIB_NAME}
       APPEND_STRING
       PROPERTY LINK_FLAGS
                "/EXPORT:?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00D_K@Z
@@ -362,11 +364,11 @@ if(ENABLE_CLING)
                 /EXPORT:cling_runtime_internal_throwIfInvalidPointer")
   endif()
 
-  target_compile_definitions(${LIB_NAME} PUBLIC CLING_IS_ON=1)
+  target_compile_definitions(${FLEX_REFLECT_LIB_NAME} PUBLIC CLING_IS_ON=1)
 endif(ENABLE_CLING)
 
 if(ENABLE_CLANG_FROM_CONAN)
-  target_link_libraries( ${LIB_NAME} PUBLIC#PRIVATE
+  target_link_libraries( ${FLEX_REFLECT_LIB_NAME} PUBLIC#PRIVATE
     CONAN_PKG::libclang
     CONAN_PKG::clang_tooling
     CONAN_PKG::clang_tooling_core
@@ -374,13 +376,13 @@ if(ENABLE_CLANG_FROM_CONAN)
   )
 endif(ENABLE_CLANG_FROM_CONAN)
 
-target_compile_options(${LIB_NAME} PRIVATE
+target_compile_options(${FLEX_REFLECT_LIB_NAME} PRIVATE
   $<$<CXX_COMPILER_ID:GNU>:-Wall>)
 
-target_compile_options(${LIB_NAME} PRIVATE
+target_compile_options(${FLEX_REFLECT_LIB_NAME} PRIVATE
   -fno-rtti)
 
-target_compile_definitions(${LIB_NAME} PRIVATE
+target_compile_definitions(${FLEX_REFLECT_LIB_NAME} PRIVATE
   ${flex_reflect_plugin_PRIVATE_DEFINES}
   # https://stackoverflow.com/a/30877725
   BOOST_SYSTEM_NO_DEPRECATED BOOST_ERROR_CODE_HEADER_ONLY
@@ -388,13 +390,13 @@ target_compile_definitions(${LIB_NAME} PRIVATE
   CORRADE_DYNAMIC_PLUGIN=1
 )
 
-target_compile_definitions(${LIB_NAME} PUBLIC
+target_compile_definitions(${FLEX_REFLECT_LIB_NAME} PUBLIC
   ${flex_reflect_plugin_PUBLIC_DEFINES}
   ${CLING_DEFINITIONS}
 )
 
 # TODO: DISABLE_DOCTEST
-target_compile_definitions(${LIB_NAME} PUBLIC
+target_compile_definitions(${FLEX_REFLECT_LIB_NAME} PUBLIC
   DISABLE_DOCTEST=1
 )
 
@@ -402,23 +404,25 @@ target_compile_definitions(${LIB_NAME} PUBLIC
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Exports.cmake)
 
 # for builds with conan workspace
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conf/${FLEX_REFLECT_LIB_NAME}.conf")
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
-            ${CMAKE_BINARY_DIR}/${LIB_NAME}.conf
+            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${FLEX_REFLECT_LIB_NAME}.conf
+            ${CMAKE_BINARY_DIR}/${FLEX_REFLECT_LIB_NAME}.conf
   )
 endif()
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conf/${FLEX_REFLECT_LIB_NAME}.conf")
   # for builds without conan
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${LIB_NAME}.conf
-            ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}.conf
+            ${CMAKE_CURRENT_SOURCE_DIR}/conf/${FLEX_REFLECT_LIB_NAME}.conf
+            ${CMAKE_CURRENT_BINARY_DIR}/${FLEX_REFLECT_LIB_NAME}.conf
   )
 endif()
 
 if(ENABLE_TESTS)
+  enable_testing()
+  message( "${PROJECT_NAME} testing enabled" )
   add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tests )
 endif()
